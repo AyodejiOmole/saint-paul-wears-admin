@@ -51,10 +51,12 @@ import {
 import { push, ref } from "firebase/database"
 import toast from "react-hot-toast"
 import { useQuery } from "@tanstack/react-query"
+import { MultiSelect } from "react-multi-select-component";
 
 import { db } from "@/lib/firebase"
 import { Product } from "@/types"
-import { fetchProducts } from "@/lib/products"
+import { fetchProducts, deleteProduct } from "@/lib/products"
+import { SIZE_OPTIONS, COLOR_OPTIONS } from "@/lib/utils"
 
 const navigation = [
   { name: "Dashboard", href: "/", icon: LayoutDashboard },
@@ -69,7 +71,7 @@ export default function ProductsPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
   const [categoryFilter, setCategoryFilter] = useState("all")
-  const [products, setProducts] = useState<Product[]>([])
+  // const [products, setProducts] = useState<Product[]>([])
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [editingProduct, setEditingProduct] = useState<Product | null>(null)
   const [images, setImages] = useState<File[]>()
@@ -82,25 +84,28 @@ export default function ProductsPage() {
     colors: [],
     category: "",
   })
+  const [sizesSelected, setSelectedSizes] = useState<{ label: string, value: string}[]>();
+  const [colorsSelected, setSelectedColors] = useState<{ label: string, value: string}[]>();
+
   const pathname = usePathname()
 
   const [loading, setLoading] = useState(false)
-
-  // const filteredProducts = products.filter((product) => {
-  //   const matchesSearch =
-  //     product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-  //     product.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-  //     product.id.toLowerCase().includes(searchTerm.toLowerCase())
-  //   const matchesCategory = categoryFilter === "all" || product.category === categoryFilter
-  //   return matchesSearch && matchesCategory
-  // })
-
-  // const searchTerm = null;
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ["products", searchTerm],
     // queryFn: ({ queryKey }) => fetchProducts(queryKey[0]),
     queryFn: fetchProducts
+  })
+
+  let products = data ?? [];
+
+  const filteredProducts = products.filter((product) => {
+    const matchesSearch =
+      product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      product.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      product?.id?.toLowerCase().includes(searchTerm.toLowerCase())
+    const matchesCategory = categoryFilter === "all" || product.category === categoryFilter
+    return matchesSearch && matchesCategory
   })
 
   const formatCurrency = (amount: number) => {
@@ -155,9 +160,9 @@ export default function ProductsPage() {
           description: newProduct.description || "",
           price: newProduct.price,
           stock: newProduct.stock,
-          sizes: newProduct.sizes || [],
-          sizeOptions: newProduct.sizes || [],
-          colors: newProduct.colors || [],
+          sizes: sizesSelected?.map((_) => _.value) || [],
+          sizeOptions: sizesSelected?.map((_) => _.value) || [],
+          colors: colorsSelected?.map((_) => _.value) || [],
           category: newProduct.category || "Uncategorized",
           productImages: uploadedUrls
         }
@@ -204,7 +209,7 @@ export default function ProductsPage() {
             }
           : product,
       )
-      setProducts(updatedProducts)
+      // setProducts(updatedProducts)
       setEditingProduct(null)
       setNewProduct({
         name: "",
@@ -220,8 +225,23 @@ export default function ProductsPage() {
     }
   }
 
-  const handleDeleteProduct = (productId: string) => {
-    setProducts(products.filter((product) => product.id !== productId))
+  const handleDeleteProduct = async (productId: string) => {
+    try {
+      toast.loading("Deleting product...");
+
+      const result = await deleteProduct(productId);
+      toast.dismiss();
+      if(result.success) {
+        toast.success(result.message);
+        products = products.filter((product) => product.id !== productId);
+      } else {
+        toast.error(result.message);
+      }
+    } catch(error) {
+      console.log("Error deleting product: ", error)
+      toast.dismiss();
+      toast.error("Failed to delete product");
+    }
   }
 
   const categories = Array.from(new Set(products.map((product) => product.category)))
@@ -372,7 +392,13 @@ export default function ProductsPage() {
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="sizes">Available Sizes (comma-separated)</Label>
-                  <Input
+                    <MultiSelect
+                      options={SIZE_OPTIONS}
+                      value={sizesSelected ?? []}
+                      onChange={setSelectedSizes}
+                      labelledBy="Select sizes"
+                    />
+                  {/* <Input
                     id="sizes"
                     value={newProduct.sizes?.join(", ")}
                     onChange={(e) =>
@@ -382,11 +408,11 @@ export default function ProductsPage() {
                       })
                     }
                     placeholder="S, M, L, XL"
-                  />
+                  /> */}
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="colors">Available Colors (comma-separated)</Label>
-                  <Input
+                  {/* <Input
                     id="colors"
                     value={newProduct.colors?.join(", ")}
                     onChange={(e) =>
@@ -396,7 +422,13 @@ export default function ProductsPage() {
                       })
                     }
                     placeholder="Black, White, Navy"
-                  />
+                  /> */}
+                    <MultiSelect
+                      options={COLOR_OPTIONS}
+                      value={colorsSelected ?? []}
+                      onChange={setSelectedColors}
+                      labelledBy="Select colors"
+                    />
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="image">Product Image URL</Label>

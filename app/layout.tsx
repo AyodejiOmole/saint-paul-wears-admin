@@ -8,6 +8,7 @@ import "./globals.css"
 import { Toaster } from "react-hot-toast";
 
 import { ReactQueryProvider } from "@/providers/react-query-provider"
+import { AuthProvider } from "@/contexts/auth-context"
 
 const inter = Inter({
   subsets: ["latin"],
@@ -39,10 +40,12 @@ export default function RootLayout({
         className={`font-sans ${GeistSans.variable} ${GeistMono.variable} ${inter.variable} ${cormorantGaramond.variable}`}
       >
         <ReactQueryProvider>
-          {children}
-          <Toaster 
-            position="top-right"
-          />
+          <AuthProvider>
+            {children}
+            <Toaster 
+              position="top-right"
+            />
+          </AuthProvider>
         </ReactQueryProvider>
       </body>
     </html>

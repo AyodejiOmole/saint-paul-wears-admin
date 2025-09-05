@@ -49,6 +49,10 @@ import {
   Calendar,
   ShoppingCart,
 } from "lucide-react"
+import { useQuery } from "@tanstack/react-query"
+
+import { User } from "@/types"
+import { fetchUsers } from "@/lib/users"
 
 const navigation = [
   { name: "Dashboard", href: "/", icon: LayoutDashboard },
@@ -58,147 +62,6 @@ const navigation = [
   { name: "Hero Banners", href: "/banners", icon: ImageIcon },
   { name: "Revenue", href: "/revenue", icon: TrendingUp },
 ]
-
-// Mock users data
-const mockUsers = [
-  {
-    id: "USER-001",
-    name: "Adebayo Johnson",
-    email: "adebayo@email.com",
-    phone: "+234 801 234 5678",
-    avatar: "/placeholder.svg?height=40&width=40",
-    status: "active",
-    joinDate: "2023-12-15",
-    lastLogin: "2024-01-16",
-    totalOrders: 8,
-    totalSpent: 450000,
-    address: {
-      street: "123 Victoria Island",
-      city: "Lagos",
-      state: "Lagos State",
-      country: "Nigeria",
-    },
-    orderHistory: [
-      { id: "ORD-001", date: "2024-01-15", total: 115000, status: "pending" },
-      { id: "ORD-008", date: "2024-01-10", total: 85000, status: "delivered" },
-      { id: "ORD-015", date: "2024-01-05", total: 125000, status: "delivered" },
-    ],
-  },
-  {
-    id: "USER-002",
-    name: "Fatima Abdullahi",
-    email: "fatima@email.com",
-    phone: "+234 802 345 6789",
-    avatar: "/placeholder.svg?height=40&width=40",
-    status: "active",
-    joinDate: "2023-11-20",
-    lastLogin: "2024-01-14",
-    totalOrders: 5,
-    totalSpent: 275000,
-    address: {
-      street: "456 Wuse II",
-      city: "Abuja",
-      state: "FCT",
-      country: "Nigeria",
-    },
-    orderHistory: [
-      { id: "ORD-002", date: "2024-01-14", total: 85000, status: "shipped" },
-      { id: "ORD-012", date: "2024-01-08", total: 95000, status: "delivered" },
-    ],
-  },
-  {
-    id: "USER-003",
-    name: "Chidi Okafor",
-    email: "chidi@email.com",
-    phone: "+234 803 456 7890",
-    avatar: "/placeholder.svg?height=40&width=40",
-    status: "active",
-    joinDate: "2023-10-10",
-    lastLogin: "2024-01-12",
-    totalOrders: 12,
-    totalSpent: 680000,
-    address: {
-      street: "789 GRA",
-      city: "Port Harcourt",
-      state: "Rivers State",
-      country: "Nigeria",
-    },
-    orderHistory: [
-      { id: "ORD-003", date: "2024-01-12", total: 85000, status: "delivered" },
-      { id: "ORD-018", date: "2024-01-07", total: 155000, status: "delivered" },
-      { id: "ORD-025", date: "2024-01-02", total: 75000, status: "delivered" },
-    ],
-  },
-  {
-    id: "USER-004",
-    name: "Aisha Mohammed",
-    email: "aisha@email.com",
-    phone: "+234 804 567 8901",
-    avatar: "/placeholder.svg?height=40&width=40",
-    status: "inactive",
-    joinDate: "2023-09-05",
-    lastLogin: "2023-12-20",
-    totalOrders: 2,
-    totalSpent: 145000,
-    address: {
-      street: "321 Kaduna Road",
-      city: "Kano",
-      state: "Kano State",
-      country: "Nigeria",
-    },
-    orderHistory: [
-      { id: "ORD-004", date: "2024-01-16", total: 120000, status: "pending" },
-      { id: "ORD-030", date: "2023-12-15", total: 25000, status: "delivered" },
-    ],
-  },
-  {
-    id: "USER-005",
-    name: "Emeka Nwankwo",
-    email: "emeka@email.com",
-    phone: "+234 805 678 9012",
-    avatar: "/placeholder.svg?height=40&width=40",
-    status: "active",
-    joinDate: "2024-01-01",
-    lastLogin: "2024-01-15",
-    totalOrders: 3,
-    totalSpent: 195000,
-    address: {
-      street: "654 Independence Layout",
-      city: "Enugu",
-      state: "Enugu State",
-      country: "Nigeria",
-    },
-    orderHistory: [
-      { id: "ORD-035", date: "2024-01-13", total: 65000, status: "shipped" },
-      { id: "ORD-040", date: "2024-01-08", total: 85000, status: "delivered" },
-    ],
-  },
-]
-
-interface User {
-  id: string
-  name: string
-  email: string
-  phone: string
-  avatar: string
-  status: "active" | "inactive"
-  joinDate: string
-  lastLogin: string
-  totalOrders: number
-  totalSpent: number
-  address: {
-    street: string
-    city: string
-    state: string
-    country: string
-  }
-  orderHistory: Array<{
-    id: string
-    date: string
-    total: number
-    status: string
-  }>
-}
 
 const statusColors = {
   active: "bg-green-100 text-green-800 border-green-200",
@@ -215,23 +78,28 @@ export default function UsersPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
-  const [users, setUsers] = useState<User[]>(mockUsers)
+  const [users, setUsers] = useState<User[]>()
   const [selectedUser, setSelectedUser] = useState<User | null>(null)
   const pathname = usePathname()
 
-  const filteredUsers = users.filter((user) => {
-    const matchesSearch =
-      user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.id.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesStatus = statusFilter === "all" || user.status === statusFilter
-    return matchesSearch && matchesStatus
-  })
+  // const filteredUsers = users.filter((user) => {
+  //   const matchesSearch =
+  //     user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  //     user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  //     user.id.toLowerCase().includes(searchTerm.toLowerCase())
+  //   const matchesStatus = statusFilter === "all" || user.status === statusFilter
+  //   return matchesSearch && matchesStatus
+  // })
 
-  const activeUsers = users.filter((user) => user.status === "active").length
-  const inactiveUsers = users.filter((user) => user.status === "inactive").length
-  const totalRevenue = users.reduce((sum, user) => sum + user.totalSpent, 0)
-  const totalOrders = users.reduce((sum, user) => sum + user.totalOrders, 0)
+    // const searchTerm = "";
+    const { data, isLoading, isError } = useQuery({
+      queryKey: ["users", searchTerm],
+      queryFn: ({ queryKey }) => fetchUsers(queryKey[0]),
+      // queryFn: fetchUsers
+    })
+
+  const totalRevenue = data?.reduce((sum, user) => sum + user.totalSpent, 0)
+  const totalOrders = data?.reduce((sum, user) => sum + user.totalOrders, 0)
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("en-NG", {
@@ -248,13 +116,13 @@ export default function UsersPage() {
     })
   }
 
-  const toggleUserStatus = (userId: string) => {
-    setUsers(
-      users.map((user) =>
-        user.id === userId ? { ...user, status: user.status === "active" ? "inactive" : "active" } : user,
-      ),
-    )
-  }
+  // const toggleUserStatus = (userId: string) => {
+  //   setUsers(
+  //     users.map((user) =>
+  //       user.id === userId ? { ...user, status: user.status === "active" ? "inactive" : "active" } : user,
+  //     ),
+  //   )
+  // }
 
   const getInitials = (name: string) => {
     return name
@@ -344,12 +212,12 @@ export default function UsersPage() {
                 <Users className="h-4 w-4 text-primary" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-primary">{users.length}</div>
+                <div className="text-2xl font-bold text-primary">{data?.length}</div>
                 <p className="text-xs text-muted-foreground">Registered customers</p>
               </CardContent>
             </Card>
 
-            <Card className="border-border">
+            {/* <Card className="border-border">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium text-card-foreground">Active Users</CardTitle>
                 <UserCheck className="h-4 w-4 text-accent" />
@@ -358,7 +226,7 @@ export default function UsersPage() {
                 <div className="text-2xl font-bold text-accent">{activeUsers}</div>
                 <p className="text-xs text-muted-foreground">Currently active accounts</p>
               </CardContent>
-            </Card>
+            </Card> */}
 
             <Card className="border-border">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -377,7 +245,7 @@ export default function UsersPage() {
                 <TrendingUp className="h-4 w-4 text-secondary" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-secondary">{formatCurrency(totalRevenue)}</div>
+                <div className="text-2xl font-bold text-secondary">{formatCurrency(totalRevenue ?? 0)}</div>
                 <p className="text-xs text-muted-foreground">From all user purchases</p>
               </CardContent>
             </Card>
@@ -420,7 +288,7 @@ export default function UsersPage() {
           <Card className="border-border">
             <CardHeader>
               <CardTitle className="font-heading text-lg text-card-foreground">
-                Users ({filteredUsers.length})
+                Users ({data?.length})
               </CardTitle>
               <CardDescription className="text-muted-foreground">
                 Manage customer accounts and view user details
@@ -433,27 +301,27 @@ export default function UsersPage() {
                     <TableRow>
                       <TableHead className="font-medium">User</TableHead>
                       <TableHead className="font-medium">Contact</TableHead>
-                      <TableHead className="font-medium">Status</TableHead>
+                      {/* <TableHead className="font-medium">Status</TableHead> */}
                       <TableHead className="font-medium">Orders</TableHead>
                       <TableHead className="font-medium">Total Spent</TableHead>
                       <TableHead className="font-medium">Join Date</TableHead>
-                      <TableHead className="font-medium">Last Login</TableHead>
+                      {/* <TableHead className="font-medium">Last Login</TableHead> */}
                       <TableHead className="font-medium">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredUsers.map((user) => (
+                    {data?.map((user) => (
                       <TableRow key={user.id} className="hover:bg-muted/50">
                         <TableCell>
                           <div className="flex items-center gap-3">
                             <Avatar className="h-10 w-10">
-                              <AvatarImage src={user.avatar || "/placeholder.svg"} alt={user.name} />
+                              <AvatarImage src={"/placeholder.svg"} alt={user.firstName} />
                               <AvatarFallback className="bg-accent text-accent-foreground">
-                                {getInitials(user.name)}
+                                {getInitials(user.firstName + user.lastName)}
                               </AvatarFallback>
                             </Avatar>
                             <div>
-                              <div className="font-medium">{user.name}</div>
+                              <div className="font-medium">{user.firstName + user.lastName}</div>
                               <div className="text-sm text-muted-foreground">{user.id}</div>
                             </div>
                           </div>
@@ -470,15 +338,15 @@ export default function UsersPage() {
                             </div>
                           </div>
                         </TableCell>
-                        <TableCell>
+                        {/* <TableCell>
                           <Badge className={statusColors[user.status]}>
                             {user.status.charAt(0).toUpperCase() + user.status.slice(1)}
                           </Badge>
-                        </TableCell>
+                        </TableCell> */}
                         <TableCell className="font-medium">{user.totalOrders}</TableCell>
                         <TableCell className="font-medium">{formatCurrency(user.totalSpent)}</TableCell>
                         <TableCell>{formatDate(user.joinDate)}</TableCell>
-                        <TableCell>{formatDate(user.lastLogin)}</TableCell>
+                        {/* <TableCell>{formatDate(user.lastLogin)}</TableCell> */}
                         <TableCell>
                           <div className="flex items-center gap-2">
                             <Dialog
@@ -494,7 +362,7 @@ export default function UsersPage() {
                                 <DialogHeader>
                                   <DialogTitle className="font-heading">User Details</DialogTitle>
                                   <DialogDescription>
-                                    Complete information for {user.name} ({user.id})
+                                    Complete information for {user.firstName} ({user.id})
                                   </DialogDescription>
                                 </DialogHeader>
                                 <div className="grid gap-6 py-4">
@@ -507,13 +375,13 @@ export default function UsersPage() {
                                       <CardContent className="space-y-3">
                                         <div className="flex items-center gap-3">
                                           <Avatar className="h-12 w-12">
-                                            <AvatarImage src={user.avatar || "/placeholder.svg"} alt={user.name} />
+                                            <AvatarImage src={"/placeholder.svg"} alt={user.firstName} />
                                             <AvatarFallback className="bg-accent text-accent-foreground">
-                                              {getInitials(user.name)}
+                                              {getInitials(user.firstName + user.lastName)}
                                             </AvatarFallback>
                                           </Avatar>
                                           <div>
-                                            <div className="font-medium">{user.name}</div>
+                                            <div className="font-medium">{user.firstName}</div>
                                             <div className="text-sm text-muted-foreground">{user.id}</div>
                                           </div>
                                         </div>
@@ -529,7 +397,7 @@ export default function UsersPage() {
                                           <div className="flex items-center gap-2">
                                             <MapPin className="h-4 w-4 text-muted-foreground" />
                                             <span className="text-sm">
-                                              {user.address.street}, {user.address.city}, {user.address.state}
+                                              {user?.address?.street}, {user?.address?.city}, {user?.address?.state}
                                             </span>
                                           </div>
                                           <div className="flex items-center gap-2">
@@ -558,16 +426,16 @@ export default function UsersPage() {
                                           </div>
                                         </div>
                                         <div className="space-y-2">
-                                          <div className="flex justify-between">
+                                          {/* <div className="flex justify-between">
                                             <span className="text-sm">Account Status:</span>
                                             <Badge className={statusColors[user.status]}>
                                               {user.status.charAt(0).toUpperCase() + user.status.slice(1)}
                                             </Badge>
-                                          </div>
-                                          <div className="flex justify-between">
+                                          </div> */}
+                                          {/* <div className="flex justify-between">
                                             <span className="text-sm">Last Login:</span>
                                             <span className="text-sm">{formatDate(user.lastLogin)}</span>
-                                          </div>
+                                          </div> */}
                                           <div className="flex justify-between">
                                             <span className="text-sm">Average Order:</span>
                                             <span className="text-sm">
@@ -596,7 +464,7 @@ export default function UsersPage() {
                                             </TableRow>
                                           </TableHeader>
                                           <TableBody>
-                                            {user.orderHistory.map((order) => (
+                                            {user?.orderHistory?.map((order) => (
                                               <TableRow key={order.id}>
                                                 <TableCell className="font-mono text-sm">{order.id}</TableCell>
                                                 <TableCell>{formatDate(order.date)}</TableCell>
@@ -621,7 +489,7 @@ export default function UsersPage() {
                               </DialogContent>
                             </Dialog>
 
-                            <AlertDialog>
+                            {/* <AlertDialog>
                               <AlertDialogTrigger asChild>
                                 <Button
                                   variant="outline"
@@ -667,7 +535,7 @@ export default function UsersPage() {
                                   </AlertDialogAction>
                                 </AlertDialogFooter>
                               </AlertDialogContent>
-                            </AlertDialog>
+                            </AlertDialog> */}
                           </div>
                         </TableCell>
                       </TableRow>
