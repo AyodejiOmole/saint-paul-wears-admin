@@ -455,9 +455,6 @@ export default function ProductsPage() {
                       className="w-full"
                       required
                     />
-                    {/* <Button variant="outline" size="sm">
-                      <Upload className="h-4 w-4" />
-                    </Button> */}
                     <label htmlFor="file-input">
                       <Button variant="outline" size="sm" asChild>
                         <span className="cursor-pointer">

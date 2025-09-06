@@ -660,9 +660,16 @@ export default function BannersPage() {
                                       accept="image/*"
                                       onChange={(e) => setImage(e.target.files![0])}
                                     />
-                                    <Button variant="outline" size="sm">
+                                    {/* <Button variant="outline" size="sm">
                                       <Upload className="h-4 w-4" />
-                                    </Button>
+                                    </Button> */}
+                                    <label htmlFor="edit-image">
+                                      <Button variant="outline" size="sm" asChild>
+                                        <span className="cursor-pointer">
+                                          <Upload className="h-4 w-4" />
+                                        </span>
+                                      </Button>
+                                    </label>
                                   </div>
                                   {image && (
                                     <div className="mt-2">
