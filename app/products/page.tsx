@@ -79,8 +79,8 @@ export default function ProductsPage() {
   const [newProduct, setNewProduct] = useState<Partial<Product>>({
     name: "",
     description: "",
-    price: 0,
-    stock: 0,
+    price: undefined,
+    stock: undefined,
     sizes: [],
     colors: [],
     category: "",
@@ -363,7 +363,7 @@ export default function ProductsPage() {
                         setNewProduct({ ...newProduct, category: value })
                       }
                     >
-                      <SelectTrigger>
+                      <SelectTrigger size="sm" className="w-full">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -447,6 +447,7 @@ export default function ProductsPage() {
                       placeholder="Enter image URL or upload"
                     /> */}
                     <input
+                      id="file-input"
                       type="file"
                       multiple
                       accept="image/*"
@@ -454,9 +455,16 @@ export default function ProductsPage() {
                       className="w-full"
                       required
                     />
-                    <Button variant="outline" size="sm">
+                    {/* <Button variant="outline" size="sm">
                       <Upload className="h-4 w-4" />
-                    </Button>
+                    </Button> */}
+                    <label htmlFor="file-input">
+                      <Button variant="outline" size="sm" asChild>
+                        <span className="cursor-pointer">
+                          <Upload className="h-4 w-4" />
+                        </span>
+                      </Button>
+                    </label>
                   </div>
                 </div>
               </div>
