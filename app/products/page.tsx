@@ -57,6 +57,7 @@ import { db } from "@/lib/firebase"
 import { Product } from "@/types"
 import { fetchProducts, deleteProduct } from "@/lib/products"
 import { SIZE_OPTIONS, COLOR_OPTIONS } from "@/lib/utils"
+import { toBase64 } from "@/lib/utils"
 
 const navigation = [
   { name: "Dashboard", href: "/", icon: LayoutDashboard },
@@ -136,16 +137,6 @@ export default function ProductsPage() {
     } else {
       return []
     }    
-  }
-
-  // Helper to convert File to base64
-  function toBase64(file: File): Promise<string> {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader()
-      reader.readAsDataURL(file)
-      reader.onload = () => resolve(reader.result as string)
-      reader.onerror = reject
-    })
   }
 
   const handleAddProduct = async () => {
@@ -360,12 +351,28 @@ export default function ProductsPage() {
                   </div>
                   <div className="grid gap-2">
                     <Label htmlFor="category">Category</Label>
-                    <Input
+                    {/* <Input
                       id="category"
                       value={newProduct.category}
                       onChange={(e) => setNewProduct({ ...newProduct, category: e.target.value })}
                       placeholder="e.g., Shirts, Blazers"
-                    />
+                    /> */}
+                    <Select
+                      value={newProduct.category}
+                      onValueChange={(value: "men" | "women" | "top" | "pants") =>
+                        setNewProduct({ ...newProduct, category: value })
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="top">Top</SelectItem>
+                        <SelectItem value="men">Men</SelectItem>
+                        <SelectItem value="women">Women</SelectItem>
+                        <SelectItem value="pants">Pants</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
@@ -769,9 +776,9 @@ export default function ProductsPage() {
                         )) : <p className="text-md text-gray-500 flex align-center justify-center items-center">No products for now.</p>
                     }
 
-                    {/* {
+                    {
                       isLoading && !data && <p className="text-lg text-gray-500 flex align-center justify-center items-center">Loading...</p>
-                    } */}
+                    }
                   </TableBody>
                 </Table>
               </div>

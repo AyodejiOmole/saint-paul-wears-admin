@@ -37,6 +37,9 @@ export interface Product {
 
 export interface Banner {
     id?: string
+    // name: string
+    header: string
+    secondaryText: string
     title: string
     description: string
     image: string
@@ -45,6 +48,8 @@ export interface Banner {
     ctaText?: string
     ctaLink?: string
     isActive?: boolean
+    updatedAt: string
+    createdAt: string
 }
 
 export interface Order {

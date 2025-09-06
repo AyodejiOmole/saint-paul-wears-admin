@@ -32,3 +32,13 @@ export const SIZE_OPTIONS = [
   { value: '36', label: '36"' },
   { value: '38', label: '38"' }
 ];
+
+// Helper to convert File to base64
+export function toBase64(file: File): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader()
+      reader.readAsDataURL(file)
+      reader.onload = () => resolve(reader.result as string)
+      reader.onerror = reject
+    })
+  }
