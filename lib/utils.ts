@@ -25,12 +25,12 @@ export const SIZE_OPTIONS = [
   { value: 'l', label: 'Large (L)' },
   { value: 'xl', label: 'Extra Large (XL)' },
   { value: 'xxl', label: 'Double XL (XXL)' },
-  { value: '28', label: '28"' },
-  { value: '30', label: '30"' },
-  { value: '32', label: '32"' },
-  { value: '34', label: '34"' },
-  { value: '36', label: '36"' },
-  { value: '38', label: '38"' }
+  // { value: '28', label: '28"' },
+  // { value: '30', label: '30"' },
+  // { value: '32', label: '32"' },
+  // { value: '34', label: '34"' },
+  // { value: '36', label: '36"' },
+  // { value: '38', label: '38"' }
 ];
 
 // Helper to convert File to base64

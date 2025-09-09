@@ -9,7 +9,7 @@ export interface User {
     role?: "user" | "admin"
     totalSpent: number
     totalOrders: number
-    orderHistory?: Order[]
+    orders?: Order[]
 }
 
 export interface Address {
@@ -52,9 +52,34 @@ export interface Banner {
     createdAt: string
 }
 
-export interface Order {
-    id: string
-    total: number
-    status: "pending" | "shipped" | "delivered"
-    date: string
+// types/order.ts
+export type OrderStatus = 'CREATED' | 'INITIATED' | 'AWAITING_WEBHOOK' | 'PAID' | 'FAILED' | 'CANCELLED' | 'REFUNDED';
+
+export interface OrderItem {
+  id: string
+  name: string
+  price: number
+  image: string
+  size: string
+  color: string
+  quantity: number
+  category: string
 }
+
+export type Order = {
+    id: string;
+    userId: string;
+    items: OrderItem[];
+    amount: number;
+    currency: 'NGN';
+    status: OrderStatus;
+    paystack: {
+        reference: string | null;
+        authorizationUrl: string | null;
+        accessCode: string | null;
+    };
+    createdAt: number;
+    updatedAt: number;
+    customer: Omit<User, "id" | "role" | "totalSpent" | "totalOrders" | "joinDate" | "orders">;
+    deliveryAddress: Address
+};

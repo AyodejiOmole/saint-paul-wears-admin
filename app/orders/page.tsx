@@ -23,6 +23,11 @@ import {
   ChevronDown,
   ChevronRight,
 } from "lucide-react"
+import { useQuery } from "@tanstack/react-query"
+
+import { Order } from "@/types"
+import { fetchOrders } from "@/lib/orders"
+import { CANCELLED } from "dns"
 
 const navigation = [
   { name: "Dashboard", href: "/", icon: LayoutDashboard },
@@ -33,66 +38,23 @@ const navigation = [
   { name: "Revenue", href: "/revenue", icon: TrendingUp },
 ]
 
-// Mock orders data
-const mockOrders = [
-  {
-    id: "ORD-001",
-    customer: { name: "Adebayo Johnson", email: "adebayo@email.com", phone: "+234 801 234 5678" },
-    items: [
-      { name: "Saint Paul Classic Shirt", size: "L", color: "Black", quantity: 2, price: 45000 },
-      { name: "Premium Leather Belt", size: "32", color: "Brown", quantity: 1, price: 25000 },
-    ],
-    total: 115000,
-    status: "pending",
-    paymentStatus: "paid",
-    orderDate: "2024-01-15",
-    shippingAddress: "123 Victoria Island, Lagos, Nigeria",
-  },
-  {
-    id: "ORD-002",
-    customer: { name: "Fatima Abdullahi", email: "fatima@email.com", phone: "+234 802 345 6789" },
-    items: [{ name: "Luxury Blazer", size: "M", color: "Navy", quantity: 1, price: 85000 }],
-    total: 85000,
-    status: "shipped",
-    paymentStatus: "paid",
-    orderDate: "2024-01-14",
-    shippingAddress: "456 Wuse II, Abuja, Nigeria",
-  },
-  {
-    id: "ORD-003",
-    customer: { name: "Chidi Okafor", email: "chidi@email.com", phone: "+234 803 456 7890" },
-    items: [
-      { name: "Designer Trousers", size: "34", color: "Charcoal", quantity: 1, price: 55000 },
-      { name: "Silk Tie", size: "One Size", color: "Burgundy", quantity: 2, price: 15000 },
-    ],
-    total: 85000,
-    status: "delivered",
-    paymentStatus: "paid",
-    orderDate: "2024-01-12",
-    shippingAddress: "789 GRA, Port Harcourt, Nigeria",
-  },
-  {
-    id: "ORD-004",
-    customer: { name: "Aisha Mohammed", email: "aisha@email.com", phone: "+234 804 567 8901" },
-    items: [{ name: "Evening Dress", size: "S", color: "Black", quantity: 1, price: 120000 }],
-    total: 120000,
-    status: "pending",
-    paymentStatus: "pending",
-    orderDate: "2024-01-16",
-    shippingAddress: "321 Kaduna Road, Kano, Nigeria",
-  },
-]
-
 const statusColors = {
   pending: "bg-yellow-100 text-yellow-800 border-yellow-200",
   shipped: "bg-blue-100 text-blue-800 border-blue-200",
   delivered: "bg-green-100 text-green-800 border-green-200",
 }
 
+// 'CREATED' | 'INITIATED' | 'AWAITING_WEBHOOK' | 'PAID' | 'FAILED' | 'CANCELLED' | 'REFUNDED';
 const paymentStatusColors = {
-  paid: "bg-green-100 text-green-800 border-green-200",
-  pending: "bg-yellow-100 text-yellow-800 border-yellow-200",
-  failed: "bg-red-100 text-red-800 border-red-200",
+  PAID: "bg-green-100 text-green-800 border-green-200",
+  DELIVERED: "bg-green-100 text-green-800 border-green-200",
+  PENDING: "bg-yellow-100 text-yellow-800 border-yellow-200",
+  CREATED: "bg-yellow-100 text-yellow-800 border-yellow-200",
+  INITIATED: "bg-yellow-100 text-yellow-800 border-yellow-200",
+  AWAITING_WEBHOOK: "bg-yellow-100 text-yellow-800 border-yellow-200",
+  FAILED: "bg-red-100 text-red-800 border-red-200",
+  CANCELLED: "bg-red-100 text-red-800 border-red-200",
+  REFUNDED: "bg-red-100 text-red-800 border-red-200",
 }
 
 export default function OrdersPage() {
@@ -100,14 +62,22 @@ export default function OrdersPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
   const [expandedOrders, setExpandedOrders] = useState<Set<string>>(new Set())
-  const [orders, setOrders] = useState(mockOrders)
+  // const [orders, setOrders] = useState(mockOrders)
   const pathname = usePathname()
+
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ["orders"],
+    queryFn: fetchOrders
+  })
+  
+  const orders = data ?? [];
 
   const filteredOrders = orders.filter((order) => {
     const matchesSearch =
       order.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.customer.email.toLowerCase().includes(searchTerm.toLowerCase())
+      order?.customer?.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      order?.customer?.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      order?.customer?.email.toLowerCase().includes(searchTerm.toLowerCase())
     const matchesStatus = statusFilter === "all" || order.status === statusFilter
     return matchesSearch && matchesStatus
   })
@@ -123,7 +93,7 @@ export default function OrdersPage() {
   }
 
   const updateOrderStatus = (orderId: string, newStatus: string) => {
-    setOrders(orders.map((order) => (order.id === orderId ? { ...order, status: newStatus } : order)))
+    // setOrders(orders.map((order) => (order.id === orderId ? { ...order, status: newStatus } : order)))
   }
 
   const formatCurrency = (amount: number) => {
@@ -285,11 +255,11 @@ export default function OrdersPage() {
                           <TableCell className="font-mono text-sm">{order.id}</TableCell>
                           <TableCell>
                             <div>
-                              <div className="font-medium">{order.customer.name}</div>
+                              <div className="font-medium">{order.customer.firstName + " " + order.customer.lastName}</div>
                               <div className="text-sm text-muted-foreground">{order.customer.email}</div>
                             </div>
                           </TableCell>
-                          <TableCell className="font-medium">{formatCurrency(order.total)}</TableCell>
+                          <TableCell className="font-medium">{formatCurrency(order.amount)}</TableCell>
                           <TableCell>
                             <Badge className={statusColors[order.status as keyof typeof statusColors]}>
                               {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
@@ -297,12 +267,12 @@ export default function OrdersPage() {
                           </TableCell>
                           <TableCell>
                             <Badge
-                              className={paymentStatusColors[order.paymentStatus as keyof typeof paymentStatusColors]}
+                              className={paymentStatusColors[order.status as keyof typeof paymentStatusColors]}
                             >
-                              {order.paymentStatus.charAt(0).toUpperCase() + order.paymentStatus.slice(1)}
+                              {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
                             </Badge>
                           </TableCell>
-                          <TableCell>{order.orderDate}</TableCell>
+                          <TableCell>{order.createdAt}</TableCell>
                           <TableCell>
                             <div className="flex items-center gap-2">
                               <Select
@@ -333,7 +303,7 @@ export default function OrdersPage() {
                                     <h4 className="font-medium text-card-foreground mb-2">Customer Details</h4>
                                     <div className="space-y-1 text-sm">
                                       <p>
-                                        <span className="font-medium">Name:</span> {order.customer.name}
+                                        <span className="font-medium">Name:</span> {order.customer.firstName + " " + order.customer.lastName}
                                       </p>
                                       <p>
                                         <span className="font-medium">Email:</span> {order.customer.email}
@@ -342,7 +312,7 @@ export default function OrdersPage() {
                                         <span className="font-medium">Phone:</span> {order.customer.phone}
                                       </p>
                                       <p>
-                                        <span className="font-medium">Address:</span> {order.shippingAddress}
+                                        <span className="font-medium">Address:</span> {Object.entries(order.deliveryAddress).map(([key, value]) => `${value}`).join(", ")}
                                       </p>
                                     </div>
                                   </div>
@@ -355,18 +325,18 @@ export default function OrdersPage() {
                                         <span className="font-medium">Order ID:</span> {order.id}
                                       </p>
                                       <p>
-                                        <span className="font-medium">Order Date:</span> {order.orderDate}
+                                        <span className="font-medium">Order Date:</span> {order.createdAt}
                                       </p>
                                       <p>
                                         <span className="font-medium">Payment Status:</span>
                                         <Badge
-                                          className={`ml-2 ${paymentStatusColors[order.paymentStatus as keyof typeof paymentStatusColors]}`}
+                                          className={`ml-2 ${paymentStatusColors[order.status as keyof typeof paymentStatusColors]}`}
                                         >
-                                          {order.paymentStatus.charAt(0).toUpperCase() + order.paymentStatus.slice(1)}
+                                          {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
                                         </Badge>
                                       </p>
                                       <p>
-                                        <span className="font-medium">Total:</span> {formatCurrency(order.total)}
+                                        <span className="font-medium">Total:</span> {formatCurrency(order.amount)}
                                       </p>
                                     </div>
                                   </div>
