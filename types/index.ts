@@ -81,5 +81,7 @@ export type Order = {
     createdAt: number;
     updatedAt: number;
     customer: Omit<User, "id" | "role" | "totalSpent" | "totalOrders" | "joinDate" | "orders">;
-    deliveryAddress: Address
+    deliveryAddress: Address;
+    deliveryFee: number;
+    selectedLocation: string;
 };

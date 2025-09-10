@@ -3,7 +3,7 @@
 import { ref, remove, query, orderByKey, startAfter, limitToFirst, get, orderByChild, equalTo } from "firebase/database"
 
 import { db, auth } from "./firebase"
-import { User } from "@/types"
+import { Order, User } from "@/types"
 
 export const fetchUsers = async (
     searchTerm?: string
@@ -15,9 +15,34 @@ export const fetchUsers = async (
         if(!snapshot.exists()) return [];
 
         const data = snapshot.val();
-        let list = Object.entries(data).map(([id, val]) => ({ ...(val as any), id }));
+        let list: User[] = Object.entries(data).map(([id, val]) => ({ ...(val as any), id }));
 
-        return list;
+        const populatedLists = list.map(async (user, index) => {
+            if(!user.orders) return { ...user, orders: []};
+            let userOrders: Order[] = [];
+
+            const orderIds = Array.isArray(user.orders)
+            ? user.orders
+            : Object.keys(user.orders);
+            for(const order of orderIds) {
+                const orderRef = ref(db, `orders/${order}`);
+                const snap = await get(orderRef);
+                const orderData = snap.val();
+
+                userOrders.push({
+                    id: order,
+                    ...orderData
+                } as Order);
+            }
+
+            return { ...user, orders: userOrders }
+        })
+
+        const result = await Promise.all(populatedLists);
+
+        return result;
+
+        // return list;
     } catch(error) {
         console.log(error);
         return []

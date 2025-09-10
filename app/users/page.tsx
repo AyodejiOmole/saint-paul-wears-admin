@@ -69,9 +69,16 @@ const statusColors = {
 }
 
 const orderStatusColors = {
-  pending: "bg-yellow-100 text-yellow-800 border-yellow-200",
-  shipped: "bg-blue-100 text-blue-800 border-blue-200",
-  delivered: "bg-green-100 text-green-800 border-green-200",
+  PAID: "bg-green-100 text-green-800 border-green-200",
+  DELIVERED: "bg-green-100 text-green-800 border-green-200",
+  PENDING: "bg-yellow-100 text-yellow-800 border-yellow-200",
+  CREATED: "bg-yellow-100 text-yellow-800 border-yellow-200",
+  INITIATED: "bg-yellow-100 text-yellow-800 border-yellow-200",
+  AWAITING_WEBHOOK: "bg-yellow-100 text-yellow-800 border-yellow-200",
+  FAILED: "bg-red-100 text-red-800 border-red-200",
+  CANCELLED: "bg-red-100 text-red-800 border-red-200",
+  REFUNDED: "bg-red-100 text-red-800 border-red-200",
+  FAILED_OUT_OF_STOCK: "bg-red-100 text-red-800 border-red-200"
 }
 
 export default function UsersPage() {
@@ -108,7 +115,7 @@ export default function UsersPage() {
     }).format(amount)
   }
 
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString: string | number) => {
     return new Date(dateString).toLocaleDateString("en-NG", {
       year: "numeric",
       month: "short",
@@ -228,18 +235,18 @@ export default function UsersPage() {
               </CardContent>
             </Card> */}
 
-            <Card className="border-border">
+            {/* <Card className="border-border">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium text-card-foreground">Total Orders</CardTitle>
                 <ShoppingCart className="h-4 w-4 text-secondary" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-secondary">{totalOrders}</div>
+                <div className="text-2xl font-bold text-secondary">{totalOrders ?? 0}</div>
                 <p className="text-xs text-muted-foreground">Orders from all users</p>
               </CardContent>
-            </Card>
+            </Card> */}
 
-            <Card className="border-border">
+            {/* <Card className="border-border">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium text-card-foreground">Total Revenue</CardTitle>
                 <TrendingUp className="h-4 w-4 text-secondary" />
@@ -248,7 +255,7 @@ export default function UsersPage() {
                 <div className="text-2xl font-bold text-secondary">{formatCurrency(totalRevenue ?? 0)}</div>
                 <p className="text-xs text-muted-foreground">From all user purchases</p>
               </CardContent>
-            </Card>
+            </Card> */}
           </div>
 
           {/* Filters and Search */}
@@ -270,7 +277,8 @@ export default function UsersPage() {
                     className="pl-10"
                   />
                 </div>
-                <Select value={statusFilter} onValueChange={setStatusFilter}>
+
+                {/* <Select value={statusFilter} onValueChange={setStatusFilter}>
                   <SelectTrigger className="w-full md:w-48">
                     <SelectValue placeholder="Filter by status" />
                   </SelectTrigger>
@@ -279,7 +287,7 @@ export default function UsersPage() {
                     <SelectItem value="active">Active</SelectItem>
                     <SelectItem value="inactive">Inactive</SelectItem>
                   </SelectContent>
-                </Select>
+                </Select> */}
               </div>
             </CardContent>
           </Card>
@@ -343,8 +351,8 @@ export default function UsersPage() {
                             {user.status.charAt(0).toUpperCase() + user.status.slice(1)}
                           </Badge>
                         </TableCell> */}
-                        <TableCell className="font-medium">{user.totalOrders}</TableCell>
-                        <TableCell className="font-medium">{formatCurrency(user.totalSpent)}</TableCell>
+                        <TableCell className="font-medium">{user.totalOrders ?? 0}</TableCell>
+                        <TableCell className="font-medium">{formatCurrency(user.totalSpent ?? 0)}</TableCell>
                         <TableCell>{formatDate(user.joinDate)}</TableCell>
                         {/* <TableCell>{formatDate(user.lastLogin)}</TableCell> */}
                         <TableCell>
@@ -415,12 +423,12 @@ export default function UsersPage() {
                                       <CardContent className="space-y-4">
                                         <div className="grid grid-cols-2 gap-4">
                                           <div className="text-center p-3 bg-muted rounded-lg">
-                                            <div className="text-2xl font-bold text-secondary">{user.totalOrders}</div>
+                                            <div className="text-2xl font-bold text-secondary">{user.totalOrders ?? 0}</div>
                                             <div className="text-sm text-muted-foreground">Total Orders</div>
                                           </div>
                                           <div className="text-center p-3 bg-muted rounded-lg">
                                             <div className="text-2xl font-bold text-accent">
-                                              {formatCurrency(user.totalSpent)}
+                                              {formatCurrency(user.totalSpent ?? 0)}
                                             </div>
                                             <div className="text-sm text-muted-foreground">Total Spent</div>
                                           </div>
@@ -464,18 +472,18 @@ export default function UsersPage() {
                                             </TableRow>
                                           </TableHeader>
                                           <TableBody>
-                                            {user?.orderHistory?.map((order) => (
+                                            {user?.orders?.map((order) => (
                                               <TableRow key={order.id}>
                                                 <TableCell className="font-mono text-sm">{order.id}</TableCell>
-                                                <TableCell>{formatDate(order.date)}</TableCell>
-                                                <TableCell>{formatCurrency(order.total)}</TableCell>
+                                                <TableCell>{formatDate(order.createdAt)}</TableCell>
+                                                <TableCell>{formatCurrency(order.amount)}</TableCell>
                                                 <TableCell>
                                                   <Badge
                                                     className={
                                                       orderStatusColors[order.status as keyof typeof orderStatusColors]
                                                     }
                                                   >
-                                                    {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                                                    {order.status}
                                                   </Badge>
                                                 </TableCell>
                                               </TableRow>
