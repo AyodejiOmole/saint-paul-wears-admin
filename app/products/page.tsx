@@ -65,7 +65,7 @@ const navigation = [
   { name: "Products", href: "/products", icon: Package },
   { name: "Users", href: "/users", icon: Users },
   { name: "Hero Banners", href: "/banners", icon: ImageIcon },
-  { name: "Revenue", href: "/revenue", icon: TrendingUp },
+  // { name: "Revenue", href: "/revenue", icon: TrendingUp },
 ]
 
 export default function ProductsPage() {
@@ -180,40 +180,8 @@ export default function ProductsPage() {
   const handleEditProduct = (product: Product) => {
     setEditingProduct(product)
     setNewProduct(product)
-  }
-
-  const handleUpdateProduct = () => {
-    if (editingProduct && newProduct.name && newProduct.price && newProduct.stock !== undefined) {
-      const updatedProducts = products.map((product) =>
-        product.id === editingProduct.id
-          ? {
-              ...product,
-              name: newProduct.name!,
-              description: newProduct.description || "",
-              price: newProduct.price!,
-              stock: newProduct.stock!,
-              // lowStockThreshold: newProduct.lowStockThreshold || 10,
-              sizes: newProduct.sizes || [],
-              colors: newProduct.colors || [],
-              category: newProduct.category || "Uncategorized",
-              // image: newProduct.image || product.image,
-            }
-          : product,
-      )
-      // setProducts(updatedProducts)
-      setEditingProduct(null)
-      setNewProduct({
-        name: "",
-        description: "",
-        price: 0,
-        stock: 0,
-        // lowStockThreshold: 10,
-        sizes: [],
-        colors: [],
-        category: "",
-        // image: "",
-      })
-    }
+    setSelectedColors(COLOR_OPTIONS.filter(item => new Set(product?.colors).has(item.value)))
+    setSelectedSizes(SIZE_OPTIONS.filter(item => new Set(product?.sizes).has(item.value)));
   }
 
   const handleDeleteProduct = async (productId: string) => {
@@ -236,6 +204,44 @@ export default function ProductsPage() {
   }
 
   const categories = Array.from(new Set(products.map((product) => product.category)))
+
+  const handleUpdateProduct = async () => {
+    // 2. Upload new images
+    let uploadedUrls: string[] = [];
+    if(images) {
+      uploadedUrls = await uploadImages();
+    }
+
+    // 3. Merge images
+    const finalImages = [...(editingProduct?.productImages || []), ...uploadedUrls];
+
+    // 4. Update product
+    const result = await fetch(`/api/products/${editingProduct?.id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        ...newProduct,
+        sizes: sizesSelected?.map((_) => _.value) || editingProduct?.sizes || [],
+        colors: colorsSelected?.map((_) => _.value) || editingProduct?.colors || [],
+        productImages: finalImages,
+      }),
+    });
+
+    if(result.ok) {
+      setEditingProduct(null)
+      setNewProduct({
+        name: "",
+        description: "",
+        price: 0,
+        stock: 0,
+        sizes: [],
+        colors: [],
+        category: "",
+      });
+
+      window.location.reload();
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -544,8 +550,8 @@ export default function ProductsPage() {
                   </TableHeader>
                   <TableBody>
                     { 
-                      data && data.length ? 
-                        data.map((product) => (
+                      filteredProducts && filteredProducts.length ? 
+                        filteredProducts.map((product) => (
                           <TableRow key={product.id} className="hover:bg-muted/50">
                             <TableCell>
                               <div className="flex items-center gap-3">
@@ -573,32 +579,40 @@ export default function ProductsPage() {
                               </div>
                             </TableCell>
                             <TableCell>
-                              <div className="flex flex-wrap gap-1">
-                                {product.sizes.slice(0, 3).map((size) => (
-                                  <Badge key={size} variant="secondary" className="text-xs">
-                                    {size}
-                                  </Badge>
-                                ))}
-                                {product.sizes.length > 3 && (
-                                  <Badge variant="secondary" className="text-xs">
-                                    +{product.sizes.length - 3}
-                                  </Badge>
-                                )}
-                              </div>
+                              {
+                                product.sizes ? 
+                                <div className="flex flex-wrap gap-1">
+                                  {product.sizes.slice(0, 3).map((size) => (
+                                    <Badge key={size} variant="secondary" className="text-xs">
+                                      {size}
+                                    </Badge>
+                                  ))}
+
+
+                                  {product.sizes.length > 3 && (
+                                    <Badge variant="secondary" className="text-xs">
+                                      +{product.sizes.length - 3}
+                                    </Badge>
+                                  )}
+                                </div> : <p>None.</p>
+                              }
                             </TableCell>
                             <TableCell>
-                              <div className="flex flex-wrap gap-1">
-                                {product.colors.slice(0, 2).map((color) => (
-                                  <Badge key={color} variant="outline" className="text-xs">
-                                    {color}
-                                  </Badge>
-                                ))}
-                                {product.colors.length > 2 && (
-                                  <Badge variant="outline" className="text-xs">
-                                    +{product.colors.length - 2}
-                                  </Badge>
-                                )}
-                              </div>
+                              {
+                                product.colors ? 
+                                <div className="flex flex-wrap gap-1">
+                                  {product.colors.slice(0, 2).map((color) => (
+                                    <Badge key={color} variant="outline" className="text-xs">
+                                      {color}
+                                    </Badge>
+                                  ))}
+                                  {product.colors.length > 2 && (
+                                    <Badge variant="outline" className="text-xs">
+                                      +{product.colors.length - 2}
+                                    </Badge>
+                                  )}
+                                </div> : <p>None.</p>
+                              }
                             </TableCell>
                             <TableCell>
                               <div className="flex items-center gap-2">
@@ -694,7 +708,7 @@ export default function ProductsPage() {
                                       </div>
                                       <div className="grid gap-2">
                                         <Label htmlFor="edit-sizes">Available Sizes (comma-separated)</Label>
-                                        <Input
+                                        {/* <Input
                                           id="edit-sizes"
                                           value={newProduct.sizes?.join(", ")}
                                           onChange={(e) =>
@@ -703,11 +717,19 @@ export default function ProductsPage() {
                                               sizes: e.target.value.split(",").map((size) => size.trim()),
                                             })
                                           }
+                                        /> */}
+
+                                        <MultiSelect
+                                          options={SIZE_OPTIONS}
+                                          // value={SIZE_OPTIONS.filter(item => new Set(editingProduct?.sizes).has(item.value))}
+                                          value={sizesSelected!}
+                                          onChange={setSelectedSizes}
+                                          labelledBy="Select sizes"
                                         />
                                       </div>
                                       <div className="grid gap-2">
                                         <Label htmlFor="edit-colors">Available Colors (comma-separated)</Label>
-                                        <Input
+                                        {/* <Input
                                           id="edit-colors"
                                           value={newProduct.colors?.join(", ")}
                                           onChange={(e) =>
@@ -716,6 +738,14 @@ export default function ProductsPage() {
                                               colors: e.target.value.split(",").map((color) => color.trim()),
                                             })
                                           }
+                                        /> */}
+
+                                        <MultiSelect
+                                          options={COLOR_OPTIONS}
+                                          // value={COLOR_OPTIONS.filter(item => new Set(editingProduct?.colors).has(item.value))}
+                                          value={colorsSelected!}
+                                          onChange={setSelectedColors}
+                                          labelledBy="Select colors"
                                         />
                                       </div>
                                     </div>
@@ -778,7 +808,7 @@ export default function ProductsPage() {
                               </div>
                             </TableCell>
                           </TableRow>
-                        )) : <p className="text-md text-gray-500 flex align-center justify-center items-center">No products for now.</p>
+                        )) : <p className="text-md text-gray-500 flex align-center justify-center items-center">No products.</p>
                     }
 
                     {

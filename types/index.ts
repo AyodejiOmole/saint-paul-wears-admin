@@ -85,3 +85,9 @@ export type Order = {
     deliveryFee: number;
     selectedLocation: string;
 };
+
+export type AdminSummary = {
+  users: number;
+  orders: number;
+  revenue: number;
+};

@@ -60,7 +60,7 @@ const navigation = [
   { name: "Products", href: "/products", icon: Package },
   { name: "Users", href: "/users", icon: Users },
   { name: "Hero Banners", href: "/banners", icon: ImageIcon },
-  { name: "Revenue", href: "/revenue", icon: TrendingUp },
+  // { name: "Revenue", href: "/revenue", icon: TrendingUp },
 ]
 
 const statusColors = {
