@@ -47,6 +47,7 @@ import {
   Upload,
   Eye,
   Star,
+  Mail
 } from "lucide-react"
 import toast from "react-hot-toast"
 import { push, ref } from "firebase/database"
@@ -64,6 +65,8 @@ const navigation = [
   { name: "Products", href: "/products", icon: Package },
   { name: "Users", href: "/users", icon: Users },
   { name: "Hero Banners", href: "/banners", icon: ImageIcon },
+  { name: "Newsletters", href: "/newsletters", icon: Mail},
+  { name: "Delivery Fees", href: "/delivery-fee", icon: Package },
   // { name: "Revenue", href: "/revenue", icon: TrendingUp },
 ]
 

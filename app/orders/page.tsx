@@ -22,6 +22,7 @@ import {
   Search,
   ChevronDown,
   ChevronRight,
+  Mail
 } from "lucide-react"
 import { useQuery } from "@tanstack/react-query"
 
@@ -35,6 +36,8 @@ const navigation = [
   { name: "Products", href: "/products", icon: Package },
   { name: "Users", href: "/users", icon: Users },
   { name: "Hero Banners", href: "/banners", icon: ImageIcon },
+  { name: "Newsletters", href: "/newsletters", icon: Mail},
+  { name: "Delivery Fees", href: "/delivery-fee", icon: Package },
   // { name: "Revenue", href: "/revenue", icon: TrendingUp },
 ]
 

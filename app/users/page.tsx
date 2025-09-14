@@ -60,6 +60,8 @@ const navigation = [
   { name: "Products", href: "/products", icon: Package },
   { name: "Users", href: "/users", icon: Users },
   { name: "Hero Banners", href: "/banners", icon: ImageIcon },
+  { name: "Newsletters", href: "/newsletters", icon: Mail},
+  { name: "Delivery Fees", href: "/delivery-fee", icon: Package },
   // { name: "Revenue", href: "/revenue", icon: TrendingUp },
 ]
 
@@ -84,29 +86,28 @@ const orderStatusColors = {
 export default function UsersPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
-  const [statusFilter, setStatusFilter] = useState("all")
-  const [users, setUsers] = useState<User[]>()
   const [selectedUser, setSelectedUser] = useState<User | null>(null)
   const pathname = usePathname()
 
-  // const filteredUsers = users.filter((user) => {
-  //   const matchesSearch =
-  //     user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-  //     user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-  //     user.id.toLowerCase().includes(searchTerm.toLowerCase())
-  //   const matchesStatus = statusFilter === "all" || user.status === statusFilter
-  //   return matchesSearch && matchesStatus
-  // })
+  // const searchTerm = "";
+  const { data } = useQuery({
+    queryKey: ["users"],
+    queryFn: ({ queryKey }) => fetchUsers(queryKey[0]),
+  })
 
-    // const searchTerm = "";
-    const { data, isLoading, isError } = useQuery({
-      queryKey: ["users", searchTerm],
-      queryFn: ({ queryKey }) => fetchUsers(queryKey[0]),
-      // queryFn: fetchUsers
-    })
+  const users = data ?? [];
+  
+  const filteredUsers = users.filter((user) => {
+    const matchesSearch =
+      user.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.id.toLowerCase().includes(searchTerm.toLowerCase())
+    return matchesSearch;
+  })
 
-  const totalRevenue = data?.reduce((sum, user) => sum + user.totalSpent, 0)
-  const totalOrders = data?.reduce((sum, user) => sum + user.totalOrders, 0)
+  // const totalRevenue = data?.reduce((sum, user) => sum + user.totalSpent, 0)
+  // const totalOrders = data?.reduce((sum, user) => sum + user.totalOrders, 0)
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("en-NG", {
@@ -122,14 +123,6 @@ export default function UsersPage() {
       day: "numeric",
     })
   }
-
-  // const toggleUserStatus = (userId: string) => {
-  //   setUsers(
-  //     users.map((user) =>
-  //       user.id === userId ? { ...user, status: user.status === "active" ? "inactive" : "active" } : user,
-  //     ),
-  //   )
-  // }
 
   const getInitials = (name: string) => {
     return name
@@ -318,7 +311,7 @@ export default function UsersPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {data?.map((user) => (
+                    {filteredUsers?.map((user) => (
                       <TableRow key={user.id} className="hover:bg-muted/50">
                         <TableCell>
                           <div className="flex items-center gap-3">
@@ -366,11 +359,11 @@ export default function UsersPage() {
                                   <Eye className="h-4 w-4" />
                                 </Button>
                               </DialogTrigger>
-                              <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                              <DialogContent className="min-w-9/10 max-h-[90vh] overflow-y-auto">
                                 <DialogHeader>
                                   <DialogTitle className="font-heading">User Details</DialogTitle>
                                   <DialogDescription>
-                                    Complete information for {user.firstName} ({user.id})
+                                    Complete information for {user.firstName} {user.lastName}
                                   </DialogDescription>
                                 </DialogHeader>
                                 <div className="grid gap-6 py-4">
@@ -390,7 +383,7 @@ export default function UsersPage() {
                                           </Avatar>
                                           <div>
                                             <div className="font-medium">{user.firstName}</div>
-                                            <div className="text-sm text-muted-foreground">{user.id}</div>
+                                            {/* <div className="text-sm text-muted-foreground">{user.id}</div> */}
                                           </div>
                                         </div>
                                         <div className="space-y-2">
@@ -423,11 +416,11 @@ export default function UsersPage() {
                                       <CardContent className="space-y-4">
                                         <div className="grid grid-cols-2 gap-4">
                                           <div className="text-center p-3 bg-muted rounded-lg">
-                                            <div className="text-2xl font-bold text-secondary">{user.totalOrders ?? 0}</div>
+                                            <div className="text-sm font-bold text-secondary">{user.totalOrders ?? 0}</div>
                                             <div className="text-sm text-muted-foreground">Total Orders</div>
                                           </div>
                                           <div className="text-center p-3 bg-muted rounded-lg">
-                                            <div className="text-2xl font-bold text-accent">
+                                            <div className="text-sm font-bold text-accent">
                                               {formatCurrency(user.totalSpent ?? 0)}
                                             </div>
                                             <div className="text-sm text-muted-foreground">Total Spent</div>
@@ -475,7 +468,7 @@ export default function UsersPage() {
                                             {user?.orders?.map((order) => (
                                               <TableRow key={order.id}>
                                                 <TableCell className="font-mono text-sm">{order.id}</TableCell>
-                                                <TableCell>{formatDate(order.createdAt)}</TableCell>
+                                                <TableCell>{formatDate(new Date(Number(order.createdAt)).toDateString())}</TableCell>
                                                 <TableCell>{formatCurrency(order.amount)}</TableCell>
                                                 <TableCell>
                                                   <Badge

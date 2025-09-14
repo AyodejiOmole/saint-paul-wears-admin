@@ -15,7 +15,7 @@ export const fetchUsers = async (
         if(!snapshot.exists()) return [];
 
         const data = snapshot.val();
-        let list: User[] = Object.entries(data).map(([id, val]) => ({ ...(val as any), id }));
+        let list = Object.entries(data).map(([id, val]) => ({ ...(val as any), id }));
 
         const populatedLists = list.map(async (user, index) => {
             if(!user.orders) return { ...user, orders: []};

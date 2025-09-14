@@ -32,6 +32,7 @@ export interface Product {
   originalPrice?: number
   colors: string[]
   sizes: string[]
+  deliveryFee?: number
   // ...etc
 }
 

@@ -46,7 +46,7 @@ import {
   Edit,
   Trash2,
   Upload,
-  AlertTriangle,
+  Mail,
 } from "lucide-react"
 import { push, ref } from "firebase/database"
 import toast from "react-hot-toast"
@@ -65,6 +65,8 @@ const navigation = [
   { name: "Products", href: "/products", icon: Package },
   { name: "Users", href: "/users", icon: Users },
   { name: "Hero Banners", href: "/banners", icon: ImageIcon },
+  { name: "Newsletters", href: "/newsletters", icon: Mail},
+  { name: "Delivery Fees", href: "/delivery-fee", icon: Package },
   // { name: "Revenue", href: "/revenue", icon: TrendingUp },
 ]
 
@@ -84,6 +86,7 @@ export default function ProductsPage() {
     sizes: [],
     colors: [],
     category: "",
+    deliveryFee: undefined,
   })
   const [sizesSelected, setSelectedSizes] = useState<{ label: string, value: string}[]>();
   const [colorsSelected, setSelectedColors] = useState<{ label: string, value: string}[]>();
@@ -140,7 +143,7 @@ export default function ProductsPage() {
   }
 
   const handleAddProduct = async () => {
-    if (newProduct.name && newProduct.price && newProduct.stock !== undefined) {
+    if (newProduct.name && newProduct.price && newProduct.stock !== undefined && newProduct.deliveryFee) {
       setLoading(true)
 
       try {
@@ -155,7 +158,8 @@ export default function ProductsPage() {
           sizeOptions: sizesSelected?.map((_) => _.value) || [],
           colors: colorsSelected?.map((_) => _.value) || [],
           category: newProduct.category || "Uncategorized",
-          productImages: uploadedUrls
+          productImages: uploadedUrls,
+          deliveryFee: newProduct.deliveryFee,
         }
 
         await push(ref(db, "products"), product)
@@ -237,6 +241,7 @@ export default function ProductsPage() {
         sizes: [],
         colors: [],
         category: "",
+        deliveryFee: 0,
       });
 
       window.location.reload();
@@ -469,6 +474,17 @@ export default function ProductsPage() {
                       </Button>
                     </label>
                   </div>
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="edit-delivery-fee">Delivery Fee</Label>
+                  <Input
+                    id="edit-delivery-fee"
+                    type="number"
+                    value={newProduct.deliveryFee}
+                    onChange={(e) =>
+                      setNewProduct({ ...newProduct, deliveryFee: Number(e.target.value) })
+                    }
+                  />
                 </div>
               </div>
               <DialogFooter>
@@ -748,6 +764,17 @@ export default function ProductsPage() {
                                           labelledBy="Select colors"
                                         />
                                       </div>
+                                      <div className="grid gap-2">
+                                          <Label htmlFor="edit-delivery-fee">Delivery Fee</Label>
+                                          <Input
+                                            id="edit-delivery-fee"
+                                            type="number"
+                                            value={newProduct.deliveryFee}
+                                            onChange={(e) =>
+                                              setNewProduct({ ...newProduct, deliveryFee: Number(e.target.value) })
+                                            }
+                                          />
+                                      </div>
                                     </div>
                                     <DialogFooter>
                                       <Button
@@ -762,6 +789,7 @@ export default function ProductsPage() {
                                             sizes: [],
                                             colors: [],
                                             category: "",
+                                            deliveryFee:0,
                                           })
                                         }}
                                       >

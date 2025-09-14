@@ -3,7 +3,7 @@
 import { useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { LayoutDashboard, ShoppingBag, Package, Users, ImageIcon, TrendingUp, Menu, X } from "lucide-react"
+import { LayoutDashboard, ShoppingBag, Package, Users, ImageIcon, TrendingUp, Menu, X, Mail } from "lucide-react"
 import { useQuery } from "@tanstack/react-query";
 
 import { AdminSummary } from "@/types"
@@ -17,7 +17,8 @@ const navigation = [
   { name: "Products", href: "/products", icon: Package },
   { name: "Users", href: "/users", icon: Users },
   { name: "Hero Banners", href: "/banners", icon: ImageIcon },
-  // { name: "Revenue", href: "/revenue", icon: TrendingUp },
+  { name: "Newsletters", href: "/newsletters", icon: Mail},
+  { name: "Delivery Fees", href: "/delivery-fee", icon: Package },
 ]
 
 export default function DashboardPage() {
