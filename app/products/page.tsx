@@ -381,7 +381,7 @@ export default function ProductsPage() {
                         <SelectItem value="top">Top</SelectItem>
                         <SelectItem value="men">Men</SelectItem>
                         <SelectItem value="women">Women</SelectItem>
-                        <SelectItem value="pants">Pants</SelectItem>
+                        <SelectItem value="pant">Pants</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
